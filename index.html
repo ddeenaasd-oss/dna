@@ -5,7 +5,135 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f3f7f4" />
     <title>Jelajah — Tebak Lokasi</title>
-    <link rel="stylesheet" href="styles.css" />
+    <style>
+      :root { color-scheme: light; --ink: #1f342c; --muted: #829188; --green: #15845f; --green-dark: #096b4a; --line: #e9efeb; }
+* { box-sizing: border-box; }
+body { min-height: 100vh; margin: 0; padding: 25px 24px 18px; color: var(--ink); background: #f3f7f4; font-family: 'DM Sans', sans-serif; }
+button { font: inherit; }
+.app-shell { width: min(100%, 1100px); margin: 0 auto; }
+.topbar { display: flex; align-items: center; justify-content: space-between; height: 38px; }
+.brand { display: flex; align-items: center; color: var(--ink); font-family: 'Manrope', sans-serif; font-size: 21px; font-weight: 800; letter-spacing: -1px; text-decoration: none; }
+.brand-mark { display: grid; width: 29px; height: 29px; margin-right: 8px; place-items: center; border-radius: 9px; color: #fff; background: var(--green); font-size: 23px; line-height: 1; }
+.brand-period { color: #eaa750; }
+.topbar-tag { padding: 7px 11px; border: 1px solid #e4ebe6; border-radius: 20px; color: #74857c; background: #fff; font-size: 9px; font-weight: 800; letter-spacing: 1.2px; }
+.intro { display: flex; align-items: center; justify-content: space-between; padding: 27px 2px 22px; }
+.eyebrow { color: #8a9a91; font-size: 9px; font-weight: 800; letter-spacing: 1.35px; }
+.intro .eyebrow { color: var(--green); }
+h1 { margin: 6px 0 5px; font-family: 'Manrope', sans-serif; font-size: clamp(26px, 4vw, 36px); font-weight: 800; letter-spacing: -1.7px; line-height: 1.15; }
+h1 span { color: var(--green); }
+.intro-copy { margin: 0; color: #7b8b82; font-size: 12px; }
+.player-form { margin-top: 13px; }
+.player-form label { display: block; margin-bottom: 5px; color: #688075; font-size: 10px; font-weight: 800; }
+.player-form-controls { display: flex; gap: 7px; }
+.player-form input { width: min(220px, 48vw); min-width: 0; padding: 9px 11px; border: 1px solid #dfe9e2; border-radius: 9px; color: var(--ink); background: #fff; font: inherit; font-size: 11px; }
+.player-form input:focus { border-color: var(--green); outline: 2px solid #15845f22; }
+.player-form button { padding: 9px 12px; border: 0; border-radius: 9px; color: #fff; background: var(--green); font-size: 10px; font-weight: 800; cursor: pointer; }
+.player-form button:hover { background: #117652; }
+.game-layout[hidden] { display: none; }
+.player-greeting { margin: 11px 0 -8px; overflow: hidden; color: #8a9a91; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.player-greeting strong { color: var(--green); }
+.round-counter { display: flex; align-items: baseline; gap: 5px; padding: 10px 13px; border: 1px solid #e6ede8; border-radius: 12px; background: #fff; }
+.round-counter > span:first-child { margin-right: 4px; color: #8c9992; font-size: 8px; font-weight: 800; letter-spacing: 1px; }
+.round-counter strong { color: var(--green); font-family: 'Manrope', sans-serif; font-size: 20px; }
+.round-total { color: #9ba8a1; font-size: 12px; }
+.game-layout { display: grid; grid-template-columns: minmax(0, 1fr) 245px; align-items: start; gap: 17px; }
+.left-column { min-width: 0; }
+.scene-card, .map-card, .score-card { overflow: hidden; border: 1px solid #e7eee9; border-radius: 16px; background: #fff; box-shadow: 0 6px 22px #234d3807; }
+.scene-art { position: relative; height: 215px; overflow: hidden; background: linear-gradient(180deg, #b8e2e2 0%, #eaf1cf 64%, #9fc59b 65%, #638e6d 100%); }
+.scene-art::before { position: absolute; right: -5%; bottom: 18px; left: -5%; height: 90px; border-radius: 50% 50% 0 0; background: #799f78; content: ''; }
+.scene-sun { position: absolute; top: 24px; right: 14%; color: #ffe69d; font-size: 47px; text-shadow: 0 4px 15px #fff6bd80; }
+.scene-cloud { position: absolute; color: #ffffffa6; font-size: 43px; }
+.cloud-one { top: 20px; left: 13%; }.cloud-two { top: 60px; left: 56%; font-size: 28px; }
+.scene-horizon { position: absolute; right: 0; bottom: 0; left: 0; height: 102px; background: linear-gradient(165deg, transparent 0 16%, #779d78 16.5% 100%); opacity: .82; }
+.scene-landmark { position: absolute; z-index: 1; right: 50%; bottom: 21px; font-size: 103px; line-height: 1; filter: drop-shadow(0 8px 5px #294b3833); transform: translateX(50%); }
+.scene-foreground { position: absolute; z-index: 2; right: 7%; bottom: 15px; font-size: 41px; filter: drop-shadow(0 3px 2px #365c3a44); }
+.scene-caption { position: absolute; z-index: 3; top: 13px; left: 14px; padding: 6px 9px; border: 1px solid #ffffff80; border-radius: 20px; color: #fff; background: #203b3463; font-size: 8px; font-weight: 800; letter-spacing: 1px; backdrop-filter: blur(5px); }
+.live-dot { display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: #8ce0a7; }
+.clue-panel { padding: 16px 18px 17px; }
+.clue-heading { display: flex; align-items: center; gap: 10px; }
+.clue-icon { display: grid; width: 31px; height: 31px; place-items: center; border-radius: 10px; color: #d39631; background: #fff4d9; font-size: 16px; }
+.clue-heading h2 { margin: 3px 0 0; font-family: 'Manrope', sans-serif; font-size: 15px; font-weight: 800; letter-spacing: -.3px; }
+.clue-panel > p { margin: 11px 0 11px; color: #75847b; font-size: 11px; line-height: 1.6; }
+.clue-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.clue-tags span { padding: 5px 8px; border-radius: 7px; color: #648071; background: #f1f7f3; font-size: 9px; font-weight: 700; }
+.map-instruction { display: flex; align-items: center; gap: 7px; margin: 17px 2px 8px; color: #688075; font-size: 11px; font-weight: 700; }
+.map-pin-icon { color: var(--green); font-size: 19px; }
+.map-heading { display: flex; align-items: center; justify-content: space-between; padding: 13px 15px 8px; }
+.map-heading > div { display: flex; flex-direction: column; gap: 3px; }
+.map-heading strong { font-family: 'Manrope', sans-serif; font-size: 13px; }
+.map-hint { color: #9aa8a0; font-size: 9px; }
+.map-wrap { position: relative; margin: 0 10px; overflow: hidden; border: 1px solid #d4e4df; border-radius: 9px; background: #dcebea; box-shadow: inset 0 1px 5px #547c6a12; }
+.world-map { display: block; width: 100%; height: auto; }
+.map-land { filter: drop-shadow(0 2px 2px #54736538); }
+.map-land path { fill: url(#landTexture); stroke: #f5faf6; stroke-width: 3; stroke-linejoin: round; transition: filter .2s; }
+.map-land path:hover { filter: brightness(.95); }
+.map-ocean-label { position: absolute; z-index: 1; color: #9db5a7; font-size: clamp(6px, .9vw, 8px); font-weight: 700; letter-spacing: 1px; pointer-events: none; }
+.label-pacific { top: 45%; left: 7%; }.label-atlantic { top: 48%; left: 38%; }.label-indian { top: 67%; left: 62%; }
+.map-hit-area { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; cursor: crosshair; }
+.map-hit-area:focus-visible { outline: 3px solid #16845f; outline-offset: -4px; }
+#mapMarkers { pointer-events: none; }
+.guess-marker { fill: #ed9e3c; stroke: #fff; stroke-width: 4; }
+.answer-marker { fill: #16845f; stroke: #fff; stroke-width: 4; }
+.guess-line { stroke: #658675; stroke-width: 2; stroke-dasharray: 7 6; }
+.map-footer { display: flex; align-items: center; gap: 14px; min-height: 35px; padding: 0 14px; color: #84938b; font-size: 9px; }
+.map-footer > span:last-child { margin-left: auto; }
+.map-footer span { white-space: nowrap; }
+.legend-dot { display: inline-block; width: 8px; height: 8px; margin-right: 4px; border: 1px solid #fff; border-radius: 50%; vertical-align: -1px; box-shadow: 0 0 0 1px #ccd8d0; }
+.guess-dot { background: #ed9e3c; }.answer-dot { background: #16845f; }
+.action-button { display: flex; width: 100%; align-items: center; justify-content: center; gap: 12px; margin-top: 11px; padding: 13px 17px; border: 0; border-radius: 11px; color: #fff; background: var(--green); box-shadow: 0 4px 0 var(--green-dark); font-size: 12px; font-weight: 800; cursor: pointer; transition: transform .15s, background .15s; }
+.action-button:hover { background: #117652; transform: translateY(-1px); }.action-button:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--green-dark); }
+.action-button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.button-arrow { font-size: 16px; }
+.score-card { position: relative; min-height: 388px; padding: 17px 16px; }
+.score-top { display: flex; align-items: center; justify-content: space-between; }
+.score-icon { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 9px; color: #d7962e; background: #fff4d8; }
+.total-score { display: flex; align-items: baseline; gap: 6px; margin-top: 16px; }
+.total-score strong { color: var(--ink); font-family: 'Manrope', sans-serif; font-size: 39px; font-weight: 800; letter-spacing: -2px; line-height: 1; }
+.total-score span { color: #839188; font-size: 11px; font-weight: 700; }
+.score-subtitle { margin: 5px 0 16px; color: #96a198; font-size: 10px; }
+.score-divider { height: 1px; background: var(--line); }
+.round-score-heading { display: flex; align-items: center; justify-content: space-between; margin: 16px 0 11px; color: #87968d; font-size: 9px; font-weight: 800; letter-spacing: 1px; }
+.round-score-heading strong { color: var(--green); font-family: 'Manrope', sans-serif; font-size: 16px; letter-spacing: 0; }
+.distance-box { display: flex; align-items: center; gap: 10px; min-height: 54px; padding: 10px; border: 1px solid #e8f0eb; border-radius: 10px; background: #f8fbf9; }
+.distance-icon { display: grid; width: 28px; height: 28px; flex: 0 0 28px; place-items: center; border-radius: 8px; color: var(--green); background: #e7f4eb; font-size: 17px; }
+.distance-box div { display: flex; flex-direction: column; gap: 3px; }
+.distance-box strong { color: #4c6658; font-size: 10px; }.distance-box small { color: #98a49d; font-size: 8px; }
+.how-to { display: flex; gap: 9px; margin-top: 22px; padding: 11px 10px; border-radius: 10px; background: #fff8e9; }
+.how-to-icon { font-size: 15px; }.how-to strong { color: #876d3a; font-size: 10px; }.how-to p { margin: 4px 0 0; color: #988c75; font-size: 9px; line-height: 1.55; }
+.score-stamp { position: absolute; right: 16px; bottom: 12px; color: #e9f1ec; font-size: 27px; transform: rotate(-15deg); }
+.footer { display: flex; justify-content: space-between; padding: 18px 3px 0; color: #91a097; font-size: 9px; }
+
+@media (max-width: 760px) {
+  body { padding: 17px 14px; }
+  .game-layout { grid-template-columns: minmax(0, 1fr) 210px; gap: 12px; }
+  .scene-art { height: 190px; }
+  .score-card { padding: 14px 12px; }
+  .map-footer { gap: 8px; padding: 0 9px; font-size: 8px; }
+}
+@media (max-width: 620px) {
+  .topbar-tag { font-size: 8px; }
+  .intro { padding: 23px 1px 17px; }
+  .game-layout { grid-template-columns: 1fr; }
+  .score-card { min-height: auto; display: grid; grid-template-columns: 1fr 1fr; column-gap: 14px; }
+  .score-top, .player-greeting, .total-score, .score-subtitle, .score-divider, .round-score-heading, .distance-box { grid-column: 1; }
+  .score-top { grid-row: 1; }.player-greeting { grid-row: 2; margin: 2px 0 -6px; }.total-score { grid-row: 3; margin-top: 10px; }.score-subtitle { grid-row: 4; margin: 3px 0 12px; }.score-divider { grid-row: 5; }.round-score-heading { grid-row: 6; margin: 10px 0 6px; }.distance-box { grid-row: 7; }
+  .how-to { grid-column: 2; grid-row: 1 / 8; align-self: center; margin: 0; }
+  .score-stamp { display: none; }
+}
+@media (max-width: 420px) {
+  body { padding: 13px 10px; }
+  .intro-copy { max-width: 235px; font-size: 11px; line-height: 1.5; }
+  .round-counter { gap: 3px; padding: 8px; }
+  .scene-art { height: 174px; }
+  .scene-landmark { font-size: 85px; }
+  .map-footer { flex-wrap: wrap; padding: 7px 9px; }
+  .map-footer > span:last-child { margin-left: 0; }
+  .map-hint { font-size: 8px; }
+  .footer { flex-direction: column; gap: 6px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+
+    </style>
   </head>
   <body>
     <main class="app-shell">
@@ -128,6 +256,242 @@
       </section>
       <footer class="footer"><span>Jelajahi dunia, satu tebakan dalam satu waktu.</span><span>✦ &nbsp;Selamat berpetualang!</span></footer>
     </main>
-    <script src="script.js"></script>
+    <script>
+      const rounds = [
+  {
+    city: 'Kyoto, Jepang', lat: 35.0116, lon: 135.7681,
+    title: 'Gerbang menuju ketenangan',
+    clue: 'Di kota ini, ribuan gerbang merah membentuk jalan setapak menuju kuil di tengah hutan. Musim semi membawa bunga sakura ke setiap sudut.',
+    tags: ['Asia Timur', 'Kuil & tradisi', 'Bunga sakura'], icon: '⛩️', foreground: '🌸', sky: 'linear-gradient(180deg, #b6dcdf 0%, #f2e4c5 65%, #98b88e 66%, #547c5b 100%)'
+  },
+  {
+    city: 'Santorini, Yunani', lat: 36.3932, lon: 25.4615,
+    title: 'Putih, biru, dan laut lepas',
+    clue: 'Rumah-rumah putih beratap kubah biru bertengger di tebing kaldera. Pulau ini berada di Laut Aegea, jauh di tenggara daratan utama.',
+    tags: ['Eropa Selatan', 'Pulau vulkanik', 'Laut Aegea'], icon: '🏛️', foreground: '🌊', sky: 'linear-gradient(180deg, #8bc9df 0%, #d7edf0 56%, #4cacc0 57%, #25849e 100%)'
+  },
+  {
+    city: 'Marrakesh, Maroko', lat: 31.6295, lon: -7.9811,
+    title: 'Warna rempah di kota tua',
+    clue: 'Di balik tembok merah bata, labirin pasar dipenuhi rempah, karpet, dan lentera. Pegunungan Atlas tampak di kejauhan saat langit cerah.',
+    tags: ['Afrika Utara', 'Kota bersejarah', 'Pegunungan Atlas'], icon: '🕌', foreground: '🌴', sky: 'linear-gradient(180deg, #f5c98d 0%, #f9e4ad 59%, #c68454 60%, #8f5b45 100%)'
+  },
+  {
+    city: 'Rio de Janeiro, Brasil', lat: -22.9068, lon: -43.1729,
+    title: 'Kota di antara gunung dan laut',
+    clue: 'Patung raksasa dengan tangan terbuka mengawasi teluk, pantai, dan puncak-puncak hijau. Kota ini terkenal dengan karnaval dan ritme samba.',
+    tags: ['Amerika Selatan', 'Pantai tropis', 'Samba'], icon: '⛰️', foreground: '🏖️', sky: 'linear-gradient(180deg, #8bd2d0 0%, #dbefc8 55%, #62a77a 56%, #27745e 100%)'
+  },
+  {
+    city: 'Reykjavík, Islandia', lat: 64.1466, lon: -21.9426,
+    title: 'Di negeri api dan es',
+    clue: 'Rumah-rumah berwarna cerah menghadap Atlantik Utara. Tak jauh dari sini ada mata air panas, ladang lava, dan peluang melihat cahaya utara.',
+    tags: ['Eropa Utara', 'Atlantik Utara', 'Cahaya utara'], icon: '🏠', foreground: '❄️', sky: 'linear-gradient(180deg, #a9c4d6 0%, #dce9e4 62%, #aabeb3 63%, #6e9288 100%)'
+  },
+  {
+    city: 'Cape Town, Afrika Selatan', lat: -33.9249, lon: 18.4241,
+    title: 'Di bawah gunung berpuncak datar',
+    clue: 'Sebuah gunung bersiluet datar menjadi latar kota pelabuhan ini. Dua samudra bertemu tidak jauh dari sini, di ujung selatan benua.',
+    tags: ['Afrika Selatan', 'Kota pesisir', 'Table Mountain'], icon: '⛰️', foreground: '🌊', sky: 'linear-gradient(180deg, #a8d6dd 0%, #e9e8cf 58%, #92a779 59%, #568176 100%)'
+  },
+  {
+    city: 'Jaipur, India', lat: 26.9124, lon: 75.7873,
+    title: 'Kota merah muda',
+    clue: 'Benteng megah, istana, dan fasad berwarna merah muda memenuhi kota di wilayah Rajasthan. Salah satu istananya punya banyak jendela kecil seperti sarang lebah.',
+    tags: ['Asia Selatan', 'Istana', 'Rajasthan'], icon: '🏰', foreground: '🌺', sky: 'linear-gradient(180deg, #f3c9a6 0%, #f3e1bc 58%, #c88968 59%, #93614e 100%)'
+  },
+  {
+    city: 'New York, Amerika Serikat', lat: 40.7128, lon: -74.006,
+    title: 'Cakrawala yang tak pernah tidur',
+    clue: 'Pulau-pulau, jembatan ikonis, dan gedung pencakar langit membentuk kota yang dijuluki Big Apple. Taman besar berada tepat di tengah hiruk-pikuknya.',
+    tags: ['Amerika Utara', 'Kota metropolitan', 'Big Apple'], icon: '🏙️', foreground: '🚕', sky: 'linear-gradient(180deg, #9dc2dc 0%, #e3e7d9 57%, #768f83 58%, #3e5d54 100%)'
+  }
+];
+
+const ROUND_COUNT = 5;
+const roundNumber = document.getElementById('roundNumber');
+const scoreElement = document.getElementById('score');
+const roundScoreElement = document.getElementById('roundScore');
+const distanceElement = document.getElementById('distance');
+const distanceNoteElement = document.getElementById('distanceNote');
+const clueTitle = document.getElementById('clueTitle');
+const clueText = document.getElementById('clueText');
+const clueTags = document.getElementById('clueTags');
+const sceneArt = document.getElementById('sceneArt');
+const sceneLandmark = document.getElementById('sceneLandmark');
+const sceneForeground = document.getElementById('sceneForeground');
+const mapHitArea = document.getElementById('mapHitArea');
+const mapMarkers = document.getElementById('mapMarkers');
+const mapWrap = document.getElementById('mapWrap');
+const guessCoords = document.getElementById('guessCoords');
+const mapInstruction = document.getElementById('mapInstruction');
+const actionButton = document.getElementById('actionButton');
+const actionLabel = document.getElementById('actionLabel');
+const playerForm = document.getElementById('playerForm');
+const playerNameInput = document.getElementById('playerName');
+const playerDisplay = document.getElementById('playerDisplay');
+const gameLayout = document.querySelector('.game-layout');
+
+let gameRounds = [];
+let roundIndex = 0;
+let totalScore = 0;
+let currentGuess = null;
+let roundRevealed = false;
+let finished = false;
+let playerName = '';
+
+function startGame() {
+  gameRounds = [...rounds].sort(() => Math.random() - 0.5).slice(0, ROUND_COUNT);
+  roundIndex = 0;
+  totalScore = 0;
+  finished = false;
+  scoreElement.textContent = '0';
+  playerDisplay.textContent = playerName;
+  gameLayout.hidden = false;
+  playerForm.hidden = true;
+  showRound();
+}
+
+function showRound() {
+  const round = gameRounds[roundIndex];
+  currentGuess = null;
+  roundRevealed = false;
+  roundNumber.textContent = roundIndex + 1;
+  clueTitle.textContent = round.title;
+  clueText.textContent = round.clue;
+  clueTags.replaceChildren(...round.tags.map((tag) => {
+    const chip = document.createElement('span');
+    chip.textContent = tag;
+    return chip;
+  }));
+  sceneLandmark.textContent = round.icon;
+  sceneForeground.textContent = round.foreground;
+  sceneArt.style.background = round.sky;
+  sceneArt.dataset.place = roundIndex;
+  roundScoreElement.textContent = '—';
+  distanceElement.textContent = 'Tebak lokasinya';
+  distanceNoteElement.textContent = 'Makin dekat, makin tinggi skor';
+  guessCoords.textContent = 'Belum ada tebakan';
+  mapInstruction.textContent = 'Klik peta untuk meletakkan tebakanmu';
+  mapMarkers.replaceChildren();
+  actionLabel.textContent = 'Kunci tebakan';
+  actionButton.querySelector('.button-arrow').textContent = '→';
+  actionButton.disabled = true;
+  actionButton.hidden = false;
+}
+
+function placeGuess(event) {
+  if (roundRevealed || finished) return;
+  const rect = mapHitArea.getBoundingClientRect();
+  const x = Math.max(0, Math.min(1000, ((event.clientX - rect.left) / rect.width) * 1000));
+  const y = Math.max(0, Math.min(500, ((event.clientY - rect.top) / rect.height) * 500));
+  currentGuess = { x, y, lat: 90 - y * 180 / 500, lon: x * 360 / 1000 - 180 };
+  drawMarkers();
+  guessCoords.textContent = `${currentGuess.lat.toFixed(1)}°, ${currentGuess.lon.toFixed(1)}°`;
+  mapInstruction.textContent = 'Pin sudah terpasang — yakin dengan tebakanmu?';
+  actionButton.disabled = false;
+}
+
+function lockGuess() {
+  if (finished) {
+    startGame();
+    return;
+  }
+  if (roundRevealed) {
+    roundIndex += 1;
+    if (roundIndex >= ROUND_COUNT) showFinalScore();
+    else showRound();
+    return;
+  }
+  if (!currentGuess) return;
+
+  const round = gameRounds[roundIndex];
+  const distance = distanceKm(currentGuess.lat, currentGuess.lon, round.lat, round.lon);
+  const isCorrect = distance <= 100;
+  const points = Math.round(5000 * Math.exp(-distance / 2000));
+  totalScore += points;
+  scoreElement.textContent = totalScore.toLocaleString('id-ID');
+  roundScoreElement.textContent = `+${points.toLocaleString('id-ID')}`;
+  distanceElement.textContent = isCorrect ? 'Jawaban benar!' : 'Belum tepat';
+  distanceNoteElement.textContent = `${formatDistance(distance)} · Lokasi: ${round.city}`;
+  mapInstruction.textContent = isCorrect ? `Benar! Lokasinya ${round.city}` : `Belum tepat — lokasi sebenarnya: ${round.city}`;
+  roundRevealed = true;
+  drawMarkers({ x: (round.lon + 180) * 1000 / 360, y: (90 - round.lat) * 500 / 180 });
+  actionLabel.textContent = roundIndex === ROUND_COUNT - 1 ? 'Lihat hasil akhir' : 'Ronde berikutnya';
+  actionButton.querySelector('.button-arrow').textContent = '→';
+  actionButton.disabled = false;
+}
+
+function drawMarkers(answerPoint) {
+  mapMarkers.replaceChildren();
+  const ns = 'http://www.w3.org/2000/svg';
+  if (answerPoint && currentGuess) {
+    const line = document.createElementNS(ns, 'line');
+    line.setAttribute('x1', currentGuess.x);
+    line.setAttribute('y1', currentGuess.y);
+    line.setAttribute('x2', answerPoint.x);
+    line.setAttribute('y2', answerPoint.y);
+    line.setAttribute('class', 'guess-line');
+    mapMarkers.appendChild(line);
+  }
+  if (answerPoint) addMarker(answerPoint.x, answerPoint.y, 'answer-marker');
+  if (currentGuess) addMarker(currentGuess.x, currentGuess.y, 'guess-marker');
+}
+
+function addMarker(x, y, className) {
+  const marker = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  marker.setAttribute('cx', x);
+  marker.setAttribute('cy', y);
+  marker.setAttribute('r', '9');
+  marker.setAttribute('class', className);
+  mapMarkers.appendChild(marker);
+}
+
+function distanceKm(lat1, lon1, lat2, lon2) {
+  const radians = (degrees) => degrees * Math.PI / 180;
+  const dLat = radians(lat2 - lat1);
+  const dLon = radians(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(radians(lat1)) * Math.cos(radians(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatDistance(distance) {
+  return distance < 1000 ? `${Math.round(distance)} km jauhnya` : `${(distance / 1000).toFixed(1)} ribu km jauhnya`;
+}
+
+function showFinalScore() {
+  finished = true;
+  roundNumber.textContent = '5';
+  clueTitle.textContent = 'Petualangan selesai!';
+  clueText.textContent = `${playerName}, kamu berhasil menjelajahi ${ROUND_COUNT} tempat di dunia. Total skormu ${totalScore.toLocaleString('id-ID')} poin.`;
+  clueTags.replaceChildren();
+  sceneLandmark.textContent = '🌍';
+  sceneForeground.textContent = '✈️';
+  sceneArt.style.background = 'linear-gradient(180deg, #b4d9db 0%, #e8edcd 60%, #83b88d 61%, #378765 100%)';
+  mapMarkers.replaceChildren();
+  mapInstruction.textContent = 'Siap menjelajahi dunia lagi?';
+  roundScoreElement.textContent = 'Selesai';
+  distanceElement.textContent = totalScore >= 15000 ? 'Penjelajah andal!' : 'Perjalanan yang seru!';
+  distanceNoteElement.textContent = 'Skor akhir dari 5 ronde';
+  actionLabel.textContent = 'Main lagi';
+  actionButton.querySelector('.button-arrow').textContent = '↻';
+  actionButton.disabled = false;
+}
+
+playerForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const enteredName = playerNameInput.value.trim();
+  if (!enteredName) {
+    playerNameInput.focus();
+    return;
+  }
+  playerName = enteredName;
+  startGame();
+});
+
+mapHitArea.addEventListener('click', placeGuess);
+actionButton.addEventListener('click', lockGuess);
+
+    </script>
   </body>
 </html>
